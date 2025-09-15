@@ -50,8 +50,10 @@ const searchProducts = async ({
   });
 
   try {
-    // Читаем CSV файл
-    const csvPath = path.resolve(process.cwd(), "src/data/products.csv");
+    // Читаем CSV файл - используем абсолютный путь от корня проекта
+    const projectRoot = path.resolve(__dirname, "../../../");
+    const csvPath = path.join(projectRoot, "src/data/products.csv");
+    logger?.info("🔧 [ProductSearchTool] Trying to read CSV from path:", csvPath);
     const csvData = fs.readFileSync(csvPath, "utf-8");
     
     logger?.info("📝 [ProductSearchTool] CSV file loaded successfully");
@@ -127,6 +129,15 @@ const searchProducts = async ({
 
     // Фильтрация товаров
     let filteredProducts = products.filter(product => product.visible === "y");
+    
+    logger?.info("📝 [ProductSearchTool] After visibility filter", {
+      visibleProducts: filteredProducts.length,
+      sampleProduct: filteredProducts[0] ? {
+        name: filteredProducts[0].name,
+        category: filteredProducts[0].category,
+        visible: filteredProducts[0].visible
+      } : null
+    });
 
     // Поиск по запросу
     if (query) {
@@ -137,6 +148,10 @@ const searchProducts = async ({
         product.category.toLowerCase().includes(searchQuery) ||
         product.subcategory.toLowerCase().includes(searchQuery)
       );
+      logger?.info("📝 [ProductSearchTool] After query filter", {
+        queryFilteredProducts: filteredProducts.length,
+        query: searchQuery
+      });
     }
 
     // Фильтр по категории
@@ -145,19 +160,31 @@ const searchProducts = async ({
         product.category.toLowerCase().includes(category.toLowerCase()) ||
         product.subcategory.toLowerCase().includes(category.toLowerCase())
       );
+      logger?.info("📝 [ProductSearchTool] After category filter", {
+        categoryFilteredProducts: filteredProducts.length,
+        category: category
+      });
     }
 
-    // Фильтр по цене
-    if (minPrice !== undefined) {
+    // Фильтр по цене (применяем только если значение больше 0)
+    if (minPrice !== undefined && minPrice > 0) {
       filteredProducts = filteredProducts.filter(product => 
         (product.price_with_discount > 0 ? product.price_with_discount : product.price) >= minPrice
       );
+      logger?.info("📝 [ProductSearchTool] After minPrice filter", {
+        minPriceFilteredProducts: filteredProducts.length,
+        minPrice: minPrice
+      });
     }
 
-    if (maxPrice !== undefined) {
+    if (maxPrice !== undefined && maxPrice > 0) {
       filteredProducts = filteredProducts.filter(product => 
         (product.price_with_discount > 0 ? product.price_with_discount : product.price) <= maxPrice
       );
+      logger?.info("📝 [ProductSearchTool] After maxPrice filter", {
+        maxPriceFilteredProducts: filteredProducts.length,
+        maxPrice: maxPrice
+      });
     }
 
     // Ограничиваем количество результатов
