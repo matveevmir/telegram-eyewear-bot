@@ -25,19 +25,12 @@ const useAgentStep = createStep({
 
     try {
       // Вызываем агента для генерации ответа
-      const { text } = await eyewearAgent.generateLegacy(
+      const { text } = await eyewearAgent.generate(
         [{ role: "user", content: inputData.message }],
         {
           resourceId: "telegram-bot",
           threadId: inputData.threadId,
           maxSteps: 5,
-          onStepFinish: ({ text, toolCalls, toolResults }) => {
-            logger?.info("🔄 [EyewearWorkflow] Agent step finished", { 
-              text: text?.substring(0, 100) + "...", 
-              toolCallsCount: toolCalls?.length,
-              toolResultsCount: toolResults?.length 
-            });
-          },
         }
       );
 
